@@ -31,19 +31,6 @@ def summarize_text_with_llm(item_to_summarise: dict, model_provider: str = "open
     Summarizes the given feedback item (dictionary) using the specified LLM provider and model.
     The LLM is expected to return a JSON string with sentiment, summary, and constructiveCriticism.
 
-    Args:
-        item_to_summarise: A dictionary containing the feedback details.
-                           Expected keys: 'anon_identifier', 'context_text', 'feedback_text'.
-        model_provider: The LLM provider to use (e.g., "anthropic", "openai", "gemini").
-                        Defaults to "anthropic".
-        model_version: The specific model version to use.
-                       Defaults to the MODEL_VERSION environment variable or "claude-3-haiku-20240307".
-
-    Returns:
-        A dictionary parsed from the LLM's JSON response, typically containing:
-        {'sentiment': str, 'summary': str, 'constructiveCriticism': str}.
-        Returns a dictionary with an 'error' key in case of issues.
-
     Raises:
         ValueError: If the specified model_provider is not supported or its API key is missing.
         NotImplementedError: If the summarization logic for the provider is not implemented.
@@ -55,32 +42,7 @@ def summarize_text_with_llm(item_to_summarise: dict, model_provider: str = "open
         "constructiveCriticism": "No specific details available."
     }
 
-    system_prompt = """
-    You are an HR manager, reading candid feedback to an employee. This feedback was gathered anonymously, though some may have included names.
-    The feedback consists of three parts:
-    1. How the feedback giver knows the person or context of their interaction.
-    2. Candid feedback about the person (this can be very direct, emotional, or use informal language).
-    3. Additional context for the feedback provided in the second part.
-
-    Your task is to summarize this feedback. Ensure the summary is constructive, maintains factual accuracy (including mistakes mentioned), but is delivered in a way that does not cause undue distress. Your response should be in a relaxed, colloquial Bahasa Indonesia, as if speaking to a colleague.
-
-    Your output MUST be a valid JSON object with the following three keys:
-    - "sentiment": (string) Analyze the sentiment of the feedback (e.g., "Positif Banget", "Agak Negatif", "Netral Aja").
-    - "summary": (string) A summary of the feedback, maintaining facts and mistakes, in a supportive tone and colloquial Bahasa Indonesia.
-    - "constructiveCriticism": (string) Constructive advice based on the feedback, also in colloquial Bahasa Indonesia.
-
-    Example of the input you will receive (the actual content will vary):
-    Pengenal Anonim: Teman satu tim proyek X
-    Konteks Feedback: Saat presentasi mingguan
-    Isi Feedback: Presentasinya bagus banget, tapi slide-nya kebanyakan tulisan, bikin ngantuk.
-
-    Example of your desired JSON output:
-    {
-      "sentiment": "Netral Aja",
-      "summary": "Feedbacknya bilang presentasi kamu udah oke, tapi slide-nya terlalu banyak teks jadi bikin audience agak bosen.",
-      "constructiveCriticism": "Coba deh slide presentasinya dibikin lebih visual, mungkin bisa pake gambar atau poin-poin aja biar lebih engaging."
-    }
-    """
+    system_prompt = os.getenv("SYSTEM_PROMPT")
 
     # Construct the user message from the input dictionary
     anon_identifier = item_to_summarise.get('anon_identifier', 'Tidak disebutkan')
