@@ -9,11 +9,16 @@ load_dotenv()
 
 # Retrieve API keys from environment variables
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-MODEL_VERSION = os.getenv("MODEL_VERSION", "claude-3-haiku-20240307") # Default model
+MODEL_VERSION = os.getenv("MODEL_VERSION", "gpt-3.5-turbo-1106") # Default model
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+# Initialize OpenAI client only if API key is available
+client = None
+if OPENAI_API_KEY:
+    try:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+    except Exception as e:
+        print(f"Warning: Failed to initialize OpenAI client: {e}")
+        client = None
 # Add more client initializations for other LLMs as needed
 
 def summarize_text_with_llm(item_to_summarise: dict, model_provider: str = "openai", model_version: str = "gpt-3.5-turbo-1106") -> dict:
@@ -42,7 +47,7 @@ def summarize_text_with_llm(item_to_summarise: dict, model_provider: str = "open
 
 
     if model_provider == "openai":
-        if not OPENAI_API_KEY:
+        if not OPENAI_API_KEY or not client:
             raise ValueError("OpenAI API key is not set. Please set the OPENAI_API_KEY environment variable.")
         selected_model = model_version
         try:
@@ -60,10 +65,10 @@ def summarize_text_with_llm(item_to_summarise: dict, model_provider: str = "open
         except Exception as e:
             print(f"Error during OpenAI completion: {e}")
             llm_output_dict["response"] = f"Error: {e}"
-    elif model_provider == "gemini":
-        if not GEMINI_API_KEY:
-            raise ValueError("Google Gemini API key is not set. Please set the GEMINI_API_KEY environment variable.")
-        raise NotImplementedError("Google Gemini summarization logic is not yet implemented for dictionary I/O.")
+    # elif model_provider == "gemini":
+    #     if not GEMINI_API_KEY:
+    #         raise ValueError("Google Gemini API key is not set. Please set the GEMINI_API_KEY environment variable.")
+    #     raise NotImplementedError("Google Gemini summarization logic is not yet implemented for dictionary I/O.")
     else:
         raise ValueError(f"Unsupported LLM provider: {model_provider}. Supported providers are 'openai', 'gemini'.")
 

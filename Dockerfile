@@ -1,15 +1,20 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt .
+
+# Clear pip cache and install dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# The port the app runs on. Default to 5001 if PORT is not set.
-# The app.py uses os.getenv('PORT', 5001)
-ENV PORT 5001
-EXPOSE $PORT
+# Set environment variables
+ENV PORT=5001
+ENV PYTHONUNBUFFERED=1
+
+# Expose port
+EXPOSE 5001
 
 CMD ["python", "app.py"]
